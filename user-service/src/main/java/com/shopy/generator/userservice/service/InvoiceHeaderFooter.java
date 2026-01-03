@@ -34,81 +34,82 @@ public class InvoiceHeaderFooter implements IEventHandler {
     @Override
     public void handleEvent(Event event) {
 
-        PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
-        PdfDocument pdfDoc = docEvent.getDocument();
-        PdfPage page = docEvent.getPage();
+        PdfDocumentEvent e = (PdfDocumentEvent) event;
+        PdfDocument pdf = e.getDocument();
+        PdfPage page = e.getPage();
         Rectangle area = page.getPageSize();
 
-        PdfCanvas canvas = new PdfCanvas(page);
-        Canvas layout = new Canvas(canvas, area);
+        PdfCanvas pc = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdf);
+        Canvas canvas = new Canvas(pc, area);
 
-        // ========= HEADER (LOGO + TITLE) =========
-        Table top = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+
+        // ================= HEADER =================
+        Table header = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
                 .setWidth(UnitValue.createPercentValue(100));
 
         try {
             ImageData logo = ImageDataFactory.create("classpath:/static/logo.png");
-            Image img = new Image(logo).scaleToFit(90, 60);
-            top.addCell(new Cell().add(img).setBorder(Border.NO_BORDER));
-        } catch (Exception e) {
-            top.addCell(new Cell().setBorder(Border.NO_BORDER));
+            Image img = new Image(logo).scaleToFit(95, 70);
+            header.addCell(new Cell().add(img).setBorder(Border.NO_BORDER));
+        } catch (Exception ex) {
+            header.addCell(new Cell().setBorder(Border.NO_BORDER));
         }
 
-        top.addCell(
+        header.addCell(
                 new Cell()
-                        .add(new Paragraph("INVOICE").setBold().setFontSize(18))
-                        .add(new Paragraph("Invoice #: " + invoice.getInvoiceNumber()))
-                        .add(new Paragraph("Invoice Date: " + invoice.getDate()))
+                        .add(new Paragraph("INVOICE").setBold().setFontSize(22))
+                        .add(new Paragraph("Invoice #: " + safe(invoice.getInvoiceNumber())))
+                        .add(new Paragraph("Invoice Date: " + safe(invoice.getDate())))
                         .setTextAlignment(TextAlignment.RIGHT)
                         .setBorder(Border.NO_BORDER)
         );
 
-        top.setFixedPosition(
+        header.setFixedPosition(
                 area.getLeft() + 36,
-                area.getTop() - 80,
+                area.getTop() - 90,
                 area.getWidth() - 72
         );
 
-        layout.add(top);
+        canvas.add(header);
 
 
-// ========= SENDER / RECEIVER BLOCK =========
+        // ================= SENDER / RECEIVER =================
         Table parties = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
                 .setWidth(UnitValue.createPercentValue(100));
 
-        Cell from = new Cell()
-                .add(new Paragraph("Bill From").setBold())
-                .add(new Paragraph(safe(invoice.getUser().getOrganisation().getName())))
-                .add(new Paragraph(safe(profile.getAddress())))
-                .add(new Paragraph(safe(profile.getPhone())))
-                .setBorder(Border.NO_BORDER);
+        parties.addCell(
+                new Cell()
+                        .add(new Paragraph("Bill From").setBold())
+                        .add(new Paragraph(safe(invoice.getUser().getOrganisation().getName())))
+                        .add(new Paragraph(safe(profile.getAddress())))
+                        .add(new Paragraph(safe(profile.getPhone())))
+                        .setBorder(Border.NO_BORDER)
+        );
 
-        Cell to = new Cell()
-                .add(new Paragraph("Bill To").setBold())
-                .add(new Paragraph(safe(invoice.getClientName())))
-                .add(new Paragraph(safe(invoice.getClientEmail())))
-                .add(new Paragraph(safe(invoice.getClientPhone())))
-                .setBorder(Border.NO_BORDER);
-
-        parties.addCell(from);
-        parties.addCell(to);
+        parties.addCell(
+                new Cell()
+                        .add(new Paragraph("Bill To").setBold())
+                        .add(new Paragraph(safe(invoice.getClientName())))
+                        .add(new Paragraph(safe(invoice.getClientEmail())))
+                        .add(new Paragraph(safe(invoice.getClientPhone())))
+                        .setBorder(Border.NO_BORDER)
+        );
 
         parties.setFixedPosition(
                 area.getLeft() + 36,
-                area.getTop() - 150,
+                area.getTop() - 165,
                 area.getWidth() - 72
         );
 
-        layout.add(parties);
+        canvas.add(parties);
 
 
-        // ========= FOOTER =========
+        // ================= FOOTER =================
         Table footer = new Table(UnitValue.createPercentArray(new float[]{2, 1}))
                 .setWidth(UnitValue.createPercentValue(100));
 
-        // left side bank details
+        // ---- Bank details ----
         Table bank = new Table(2);
-        bank.setWidth(UnitValue.createPercentValue(100));
 
         bank.addCell("Bank");
         bank.addCell(safe(profile.getBankName()));
@@ -124,17 +125,18 @@ public class InvoiceHeaderFooter implements IEventHandler {
 
         footer.addCell(new Cell().add(bank).setBorder(Border.NO_BORDER));
 
-        // right side QR
+        // ---- QR ----
         Cell qrCell = new Cell().setBorder(Border.NO_BORDER);
 
         if (profile.getUpiId() != null && !profile.getUpiId().isBlank()) {
 
-            String upi = "upi://pay?pa=" + profile.getUpiId()
-                    + "&pn=" + profile.getAccountHolder()
-                    + "&cu=INR";
+            String upi =
+                    "upi://pay?pa=" + profile.getUpiId()
+                            + "&pn=" + profile.getAccountHolder()
+                            + "&cu=INR";
 
             BarcodeQRCode qr = new BarcodeQRCode(upi);
-            Image qrImg = new Image(qr.createFormXObject(pdfDoc)).scaleToFit(110, 110);
+            Image qrImg = new Image(qr.createFormXObject(pdf)).scaleToFit(110, 110);
 
             qrCell.add(new Paragraph("Scan & Pay (UPI)").setBold());
             qrCell.add(qrImg);
@@ -144,18 +146,19 @@ public class InvoiceHeaderFooter implements IEventHandler {
 
         footer.setFixedPosition(
                 area.getLeft() + 36,
-                area.getBottom() + 20,
+                area.getBottom() + 25,
                 area.getWidth() - 72
         );
 
-        layout.add(footer);
+        canvas.add(footer);
 
-        layout.close();
+        canvas.close();
     }
 
     private String safe(Object v) {
         return v == null ? "" : v.toString();
     }
 }
+
 
 

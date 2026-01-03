@@ -3,6 +3,8 @@ package com.shopy.generator.userservice.service;
 import com.itextpdf.barcodes.BarcodeQRCode;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.Color;
+import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -140,47 +142,50 @@ public class InvoiceService {
                 .findByUserId(invoice.getUser().getId())
                 .orElse(new UserProfile());
 
-        // attach header/footer
+        // Attach header/footer handler
         pdf.addEventHandler(
                 PdfDocumentEvent.END_PAGE,
                 new InvoiceHeaderFooter(invoice, profile)
         );
 
-        // margins so header/footer don’t overlap
-        doc.setMargins(200, 36, 140, 36);
+        // Leave space for header + footer
+        doc.setMargins(190, 36, 150, 36);
+
 
         // ================= ITEMS TABLE =================
-        Table items = new Table(new float[]{1,4,1,2,2,2,2,2});
+        Table items = new Table(new float[]{1, 4, 1, 2, 2, 2, 2, 2});
         items.setWidth(UnitValue.createPercentValue(100));
 
-        items.addHeaderCell("Item No");
-        items.addHeaderCell("Description");
-        items.addHeaderCell("Qty");
-        items.addHeaderCell("Unit Price");
-        items.addHeaderCell("CGST");
-        items.addHeaderCell("SGST");
-        items.addHeaderCell("IGST");
-        items.addHeaderCell("Amount");
+        String[] heads = {
+                "Item No", "Description", "Qty",
+                "Unit Price", "CGST", "SGST", "IGST", "Amount"
+        };
 
-        int index = 1;
+        for (String h : heads) {
+            items.addHeaderCell(new Paragraph(h).setBold());
+        }
+
+        int i = 1;
         for (InvoiceItem item : invoice.getItems()) {
-            items.addCell(String.valueOf(index++));
-            items.addCell(item.getItemName());
-            items.addCell(item.getQuantity().toString());
-            items.addCell(item.getUnitPrice().toString());
 
-            items.addCell(String.valueOf(invoice.getCgstPercent()));
-            items.addCell(String.valueOf(invoice.getSgstPercent()));
-            items.addCell(String.valueOf(invoice.getIgstPercent()));
-            items.addCell(item.getLineTotal().toString());
+            items.addCell(String.valueOf(i++));
+            items.addCell(safe(item.getItemName()));
+            items.addCell(safe(item.getQuantity()));
+            items.addCell(safe(item.getUnitPrice()));
+
+            items.addCell(safe(invoice.getCgstPercent()));
+            items.addCell(safe(invoice.getSgstPercent()));
+            items.addCell(safe(invoice.getIgstPercent()));
+
+            items.addCell(safe(item.getLineTotal()));
         }
 
         doc.add(items);
-
         doc.add(new Paragraph("\n"));
 
+
         // ================= TOTALS =================
-        Table totals = new Table(2);
+        Table totals = new Table(new float[]{2, 1});
         totals.setWidth(UnitValue.createPercentValue(40));
         totals.setHorizontalAlignment(HorizontalAlignment.RIGHT);
 
@@ -189,9 +194,11 @@ public class InvoiceService {
 
         totals.addCell("GST");
         totals.addCell(
-                safe(invoice.getIgstAmount()
-                        + invoice.getCgstAmount()
-                        + invoice.getSgstAmount())
+                safe(
+                        invoice.getCgstAmount()
+                                + invoice.getSgstAmount()
+                                + invoice.getIgstAmount()
+                )
         );
 
         totals.addCell("Discount");
@@ -205,6 +212,7 @@ public class InvoiceService {
         doc.close();
         return baos.toByteArray();
     }
+
 
     private String safe(Object value) {
         return value == null ? "" : value.toString();
