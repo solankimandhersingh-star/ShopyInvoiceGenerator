@@ -142,62 +142,57 @@ public class InvoiceService {
                 .findByUserId(invoice.getUser().getId())
                 .orElse(new UserProfile());
 
-        // Attach header/footer handler
+        // header + footer on every page
         pdf.addEventHandler(
                 PdfDocumentEvent.END_PAGE,
                 new InvoiceHeaderFooter(invoice, profile)
         );
 
-        // Leave space for header + footer
-        doc.setMargins(190, 36, 150, 36);
+        // Prevent overlapping
+        doc.setMargins(210, 40, 150, 40);
 
 
-        // ================= ITEMS TABLE =================
-        Table items = new Table(new float[]{1, 4, 1, 2, 2, 2, 2, 2});
+        // ---------- ITEMS TABLE ----------
+        Table items = new Table(new float[]{1, 5, 1.5f, 2f, 2f});
         items.setWidth(UnitValue.createPercentValue(100));
 
-        String[] heads = {
-                "Item No", "Description", "Qty",
-                "Unit Price", "CGST", "SGST", "IGST", "Amount"
-        };
+        items.addHeaderCell("Qty");
+        items.addHeaderCell("Description");
+        items.addHeaderCell("Unit Price");
+        items.addHeaderCell("Amount");
+        items.addHeaderCell("Discount applied");
 
-        for (String h : heads) {
-            items.addHeaderCell(new Paragraph(h).setBold());
-        }
+        for (InvoiceItem it : invoice.getItems()) {
 
-        int i = 1;
-        for (InvoiceItem item : invoice.getItems()) {
+            double lineAmount = it.getLineTotal() == null
+                    ? it.getUnitPrice() * it.getQuantity()
+                    : it.getLineTotal();
 
-            items.addCell(String.valueOf(i++));
-            items.addCell(safe(item.getItemName()));
-            items.addCell(safe(item.getQuantity()));
-            items.addCell(safe(item.getUnitPrice()));
-
-            items.addCell(safe(invoice.getCgstPercent()));
-            items.addCell(safe(invoice.getSgstPercent()));
-            items.addCell(safe(invoice.getIgstPercent()));
-
-            items.addCell(safe(item.getLineTotal()));
+            items.addCell(String.valueOf(it.getQuantity()));
+            items.addCell(it.getItemName());
+            items.addCell(safe(it.getUnitPrice()));
+            items.addCell(safe(lineAmount));
+            items.addCell("✔");
         }
 
         doc.add(items);
         doc.add(new Paragraph("\n"));
 
 
-        // ================= TOTALS =================
-        Table totals = new Table(new float[]{2, 1});
-        totals.setWidth(UnitValue.createPercentValue(40));
-        totals.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        // ---------- TOTALS ----------
+        Table totals = new Table(new float[]{4, 2});
+        totals.setWidth(UnitValue.createPercentValue(45));
+        totals.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.RIGHT);
 
         totals.addCell("Subtotal");
         totals.addCell(safe(invoice.getSubtotal()));
 
-        totals.addCell("GST");
+        totals.addCell("GST Total");
         totals.addCell(
                 safe(
-                        invoice.getCgstAmount()
-                                + invoice.getSgstAmount()
-                                + invoice.getIgstAmount()
+                        (invoice.getCgstAmount() == null ? 0 : invoice.getCgstAmount()) +
+                                (invoice.getSgstAmount() == null ? 0 : invoice.getSgstAmount()) +
+                                (invoice.getIgstAmount() == null ? 0 : invoice.getIgstAmount())
                 )
         );
 
@@ -212,6 +207,7 @@ public class InvoiceService {
         doc.close();
         return baos.toByteArray();
     }
+
 
 
     private String safe(Object value) {

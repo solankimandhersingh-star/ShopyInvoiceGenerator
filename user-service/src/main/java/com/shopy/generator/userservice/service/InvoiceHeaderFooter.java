@@ -34,82 +34,112 @@ public class InvoiceHeaderFooter implements IEventHandler {
     @Override
     public void handleEvent(Event event) {
 
-        PdfDocumentEvent e = (PdfDocumentEvent) event;
-        PdfDocument pdf = e.getDocument();
-        PdfPage page = e.getPage();
+        PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
+
+        PdfDocument pdfDoc = docEvent.getDocument();
+
+        PdfPage page = docEvent.getPage();
         Rectangle area = page.getPageSize();
 
-        PdfCanvas pc = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdf);
-        Canvas canvas = new Canvas(pc, area);
+        PdfCanvas canvas = new PdfCanvas(page);
+        Canvas layout = new Canvas(canvas, area);
 
 
-        // ================= HEADER =================
-        Table header = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-                .setWidth(UnitValue.createPercentValue(100));
+        // ================== TOP COLORED HEADER BAR ==================
+        canvas.saveState()
+                .setFillColorRgb(0.95f, 0.55f, 0.12f)   // orange
+                .rectangle(area.getLeft(), area.getTop() - 40, area.getWidth(), 40)
+                .fill()
+                .restoreState();
 
-        try {
-            ImageData logo = ImageDataFactory.create("classpath:/static/logo.png");
-            Image img = new Image(logo).scaleToFit(95, 70);
-            header.addCell(new Cell().add(img).setBorder(Border.NO_BORDER));
-        } catch (Exception ex) {
-            header.addCell(new Cell().setBorder(Border.NO_BORDER));
-        }
-
-        header.addCell(
-                new Cell()
-                        .add(new Paragraph("INVOICE").setBold().setFontSize(22))
-                        .add(new Paragraph("Invoice #: " + safe(invoice.getInvoiceNumber())))
-                        .add(new Paragraph("Invoice Date: " + safe(invoice.getDate())))
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .setBorder(Border.NO_BORDER)
+        layout.showTextAligned(
+                new Paragraph("INVOICE")
+                        .setBold()
+                        .setFontSize(22)
+                        .setFontColor(com.itextpdf.kernel.colors.ColorConstants.WHITE),
+                area.getRight() - 80,
+                area.getTop() - 25,
+                TextAlignment.RIGHT
         );
 
-        header.setFixedPosition(
-                area.getLeft() + 36,
-                area.getTop() - 90,
-                area.getWidth() - 72
+
+        // ================== COMPANY NAME UNDER BAR ==================
+        layout.add(
+                new Paragraph(safe(invoice.getUser().getOrganisation().getName()))
+                        .setBold()
+                        .setFontSize(12)
+                        .setMarginTop(10)
         );
 
-        canvas.add(header);
+
+        // ================== INVOICE INFO RIGHT SIDE ==================
+        Table info = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+                .setWidth(220)
+                .setTextAlignment(TextAlignment.RIGHT);
+
+        info.addCell(noBorder("Invoice #:"));
+        info.addCell(noBorder(safe(invoice.getInvoiceNumber())));
+
+        info.addCell(noBorder("Date:"));
+        info.addCell(noBorder(safe(invoice.getDate())));
+
+        info.setFixedPosition(area.getRight() - 250, area.getTop() - 110, 220);
+        layout.add(info);
 
 
-        // ================= SENDER / RECEIVER =================
+        // ================== SECTION BAR: BILL TO ==================
+        canvas.saveState()
+                .setFillColorRgb(0.95f, 0.55f, 0.12f)
+                .rectangle(area.getLeft(), area.getTop() - 150, area.getWidth(), 18)
+                .fill()
+                .restoreState();
+
+        layout.showTextAligned(
+                new Paragraph("Bill To:")
+                        .setBold()
+                        .setFontColor(com.itextpdf.kernel.colors.ColorConstants.WHITE)
+                        .setFontSize(10),
+                area.getLeft() + 10,
+                area.getTop() - 145,
+                TextAlignment.LEFT
+        );
+
+
+        // ================== BILL FROM + BILL TO DETAILS ==================
         Table parties = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
                 .setWidth(UnitValue.createPercentValue(100));
 
-        parties.addCell(
-                new Cell()
-                        .add(new Paragraph("Bill From").setBold())
-                        .add(new Paragraph(safe(invoice.getUser().getOrganisation().getName())))
-                        .add(new Paragraph(safe(profile.getAddress())))
-                        .add(new Paragraph(safe(profile.getPhone())))
-                        .setBorder(Border.NO_BORDER)
-        );
+        parties.addCell(noBorderBlock(
+                "Contact name",
+                safe(invoice.getUser().getOrganisation().getName()),
+                safe(profile.getAddress()),
+                safe(profile.getPhone())
+        ));
 
-        parties.addCell(
-                new Cell()
-                        .add(new Paragraph("Bill To").setBold())
-                        .add(new Paragraph(safe(invoice.getClientName())))
-                        .add(new Paragraph(safe(invoice.getClientEmail())))
-                        .add(new Paragraph(safe(invoice.getClientPhone())))
-                        .setBorder(Border.NO_BORDER)
-        );
+        parties.addCell(noBorderBlock(
+                "Customer",
+                safe(invoice.getClientName()),
+                safe(invoice.getClientEmail()),
+                safe(invoice.getClientPhone())
+        ));
 
-        parties.setFixedPosition(
-                area.getLeft() + 36,
-                area.getTop() - 165,
-                area.getWidth() - 72
-        );
-
-        canvas.add(parties);
+        parties.setFixedPosition(area.getLeft() + 10, area.getTop() - 210, area.getWidth() - 20);
+        layout.add(parties);
 
 
-        // ================= FOOTER =================
+        // ================== FOOTER REMAINS SAME (BANK + QR) ==================
+        // (KEEP YOUR FOOTER CODE)
+
+
+
+
+    // ---------- FOOTER ----------
         Table footer = new Table(UnitValue.createPercentArray(new float[]{2, 1}))
                 .setWidth(UnitValue.createPercentValue(100));
 
-        // ---- Bank details ----
+        // Bank table
         Table bank = new Table(2);
+        bank.setWidth(UnitValue.createPercentValue(100));
 
         bank.addCell("Bank");
         bank.addCell(safe(profile.getBankName()));
@@ -125,40 +155,49 @@ public class InvoiceHeaderFooter implements IEventHandler {
 
         footer.addCell(new Cell().add(bank).setBorder(Border.NO_BORDER));
 
-        // ---- QR ----
-        Cell qrCell = new Cell().setBorder(Border.NO_BORDER);
+        // QR (UPI)
+        Cell qr = new Cell().setBorder(Border.NO_BORDER);
 
         if (profile.getUpiId() != null && !profile.getUpiId().isBlank()) {
 
-            String upi =
-                    "upi://pay?pa=" + profile.getUpiId()
-                            + "&pn=" + profile.getAccountHolder()
-                            + "&cu=INR";
+            String upi = "upi://pay?pa=" + profile.getUpiId()
+                    + "&pn=" + profile.getAccountHolder()
+                    + "&cu=INR";
 
-            BarcodeQRCode qr = new BarcodeQRCode(upi);
-            Image qrImg = new Image(qr.createFormXObject(pdf)).scaleToFit(110, 110);
+            BarcodeQRCode code = new BarcodeQRCode(upi);
+            Image qimg = new Image(code.createFormXObject(pdfDoc)).scaleToFit(110, 110);
 
-            qrCell.add(new Paragraph("Scan & Pay (UPI)").setBold());
-            qrCell.add(qrImg);
+            qr.add(new Paragraph("Scan & Pay (UPI)").setBold());
+            qr.add(qimg);
         }
 
-        footer.addCell(qrCell);
+        footer.addCell(qr);
 
-        footer.setFixedPosition(
-                area.getLeft() + 36,
-                area.getBottom() + 25,
-                area.getWidth() - 72
-        );
+        footer.setFixedPosition(area.getLeft() + 36, area.getBottom() + 20, area.getWidth() - 72);
+        layout.add(footer);
 
-        canvas.add(footer);
-
-        canvas.close();
+        layout.close();
     }
 
     private String safe(Object v) {
         return v == null ? "" : v.toString();
     }
+
+    private Cell noBorder(String t) {
+        return new Cell().add(new Paragraph(t)).setBorder(Border.NO_BORDER);
+    }
+
+    private Cell noBorderBlock(String title, String a, String b, String c) {
+        return new Cell()
+                .add(new Paragraph(title).setBold())
+                .add(new Paragraph(a))
+                .add(new Paragraph(b))
+                .add(new Paragraph(c))
+                .setBorder(Border.NO_BORDER);
+    }
+
 }
+
 
 
 
