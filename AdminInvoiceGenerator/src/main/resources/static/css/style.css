@@ -1,0 +1,58 @@
+/* src/main/resources/static/css/style.css */
+:root {
+    --gap: 1rem;
+    --radius: 16px;
+}
+
+.card {
+    border-radius: var(--radius);
+}
+
+.section-title {
+    font-weight: 700;
+    margin-bottom: .25rem;
+}
+
+.section-subtitle {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.hr-soft {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,.15), transparent);
+    margin: 1rem 0;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--gap);
+}
+@media (min-width: 992px) {
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+}
+
+.actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.badge-pill { border-radius: 999px; }
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+.status-approved {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+/* Forms */
+.form-label { font-weight: 600; }
+input[list] { padding-right: 2rem; }
+
+/* Centering helpers already applied via layout */

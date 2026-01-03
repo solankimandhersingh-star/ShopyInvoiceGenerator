@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User Login</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(120deg,#4e73df,#1cc88a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: #fff;
+            width: 380px;
+            border-radius: 12px;
+            padding: 25px 30px;
+            box-shadow: 0 15px 25px rgba(0,0,0,.15);
+        }
+
+        .card h2 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 12px;
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 18px;
+            border: none;
+            border-radius: 6px;
+            background: #4e73df;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .links a {
+            margin: 0 5px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #4e73df;
+        }
+
+        .captcha-box{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            background:#f3f3f3;
+            padding:8px 10px;
+            border-radius:6px;
+            margin-top:5px;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 6px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h2>User Login</h2>
+
+    <form th:action="@{/user/login}" method="post">
+
+        <label>Username / Email</label>
+        <input type="text" name="username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <label>Captcha</label>
+
+        <div class="captcha-box">
+            <span th:text="${captchaText}">ABCD12</span>
+            <a th:href="@{/user/login}">🔄 Refresh</a>
+        </div>
+
+        <input type="text" name="captcha" placeholder="Enter captcha" required>
+
+        <div class="error" th:if="${error}" th:text="${error}"></div>
+
+        <button type="submit">Login</button>
+
+    </form>
+
+    <div class="links">
+        <a href="/portal/register">Register</a> |
+        <a th:href="@{/forgot-password}">Forgot password?</a>
+    </div>
+
+</div>
+
+</body>
+</html>

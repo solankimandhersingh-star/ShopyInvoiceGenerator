@@ -1,0 +1,88 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f6ff;
+    margin: 0;
+}
+
+.page-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.card {
+    width: 420px;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+label {
+    font-size: 14px;
+    margin-top: 12px;
+    display: block;
+}
+
+input {
+    width: 100%;
+    padding: 9px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+button {
+    width: 100%;
+    margin-top: 18px;
+    padding: 10px;
+    border: none;
+    background: #4a6cff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #344df0;
+}
+
+.captcha-box {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: #f1f1f1;
+    border-radius: 6px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.captcha-box span {
+    font-size: 18px;
+}
+
+.captcha-box a {
+    margin-left: auto;
+    text-decoration: none;
+}
+
+.error {
+    color: #b90000;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.links {
+    text-align: center;
+    margin-top: 12px;
+}
+
+.links a {
+    text-decoration: none;
+}

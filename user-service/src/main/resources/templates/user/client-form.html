@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Client</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+</head>
+
+<body class="bg-dark text-white">
+
+<div class="container py-4">
+
+    <a th:href="@{/user/clients}" class="text-info mb-3 d-inline-block">⬅ Back</a>
+
+    <div class="card p-4">
+        <h4>Client Details</h4>
+
+        <form th:action="@{/user/clients/save}" method="post" th:object="${client}">
+
+            <input type="hidden" th:field="*{id}"/>
+
+            <label>Name</label>
+            <input class="form-control mb-2" th:field="*{name}" required>
+
+            <label>Email</label>
+            <input class="form-control mb-2" th:field="*{email}">
+
+            <label>Phone</label>
+            <input class="form-control mb-2" th:field="*{phone}">
+
+            <label>Address</label>
+            <textarea class="form-control mb-3" th:field="*{address}"></textarea>
+
+            <button type="submit" class="btn btn-success">Save</button>
+
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: content(~{::body})}">
+<head>
+  <title>Portal</title>
+</head>
+
+<body>
+
+<div class="card shadow p-4" style="width: 420px;">
+  <h4 class="text-center mb-4">Welcome</h4>
+
+  <div class="d-grid gap-2">
+    <a class="btn btn-primary" th:href="@{/admin/login}">Admin Login</a>
+    <a class="btn btn-success" th:href="@{/user/login}">User Login</a>
+    <a class="btn btn-outline-primary" th:href="@{/portal/register}">
+      New Registration
+    </a>
+
+  </div>
+</div>
+
+</body>
+</html>

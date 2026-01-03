@@ -1,0 +1,59 @@
+<!-- src/main/resources/templates/admin/new-user-success.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: content(~{::body})}">
+<head>
+    <title>User Created</title>
+</head>
+
+<body>
+
+<div class="text-center mb-3">
+    <h3 class="section-title">User Created</h3>
+    <div class="section-subtitle">
+        Details of the new account
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-10 col-md-8">
+
+        <ul class="list-group">
+
+            <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">Username</span>
+                <span th:text="${createdUser.username}"></span>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">Default password</span>
+                <span>password</span>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">Role</span>
+                <span th:text="${createdUser.role}"></span>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">Organisation</span>
+                <span th:text="${createdUser.organisation.name}"></span>
+            </li>
+
+        </ul>
+
+        <div class="text-center mt-3 d-flex justify-content-center gap-2">
+            <a class="btn btn-primary" th:href="@{/admin/dashboard}">
+                Dashboard
+            </a>
+
+            <a class="btn btn-outline-primary" th:href="@{/admin/new-user}">
+                Add Another
+            </a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

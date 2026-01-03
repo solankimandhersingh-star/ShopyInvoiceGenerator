@@ -1,0 +1,54 @@
+<!-- src/main/resources/templates/admin/new-user.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: content(~{::body})}">
+<head>
+    <title>Add User</title>
+</head>
+
+<body>
+
+<div class="text-center mb-3">
+    <h3 class="section-title">Add New User</h3>
+    <div class="section-subtitle">
+        Auto username (IND######) and default password
+    </div>
+</div>
+
+<form th:action="@{/admin/new-user}"
+      method="post"
+      class="row g-3 justify-content-center">
+
+    <div class="col-10 col-md-8">
+        <label class="form-label">Role</label>
+
+        <select class="form-select" name="role" required>
+            <option th:each="r : ${roles}"
+                    th:value="${r}"
+                    th:text="${r}"></option>
+        </select>
+    </div>
+
+    <div class="col-10 col-md-8">
+        <label class="form-label">Organisation name</label>
+
+        <input class="form-control"
+               type="text"
+               name="organisationName"
+               placeholder="e.g., BLUE SKY INDIA LIMITED"
+               required>
+    </div>
+
+    <div class="col-10 col-md-8 d-flex justify-content-center gap-2">
+        <button class="btn btn-primary">Create User</button>
+
+        <a class="btn btn-outline-secondary"
+           th:href="@{/admin/dashboard}">
+            Cancel
+        </a>
+    </div>
+
+</form>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+<form th:action="@{/user/verify-otp}" method="post">
+
+  <input type="hidden" name="username" th:value="${username}">
+
+  <label>Enter OTP</label>
+  <input name="otp" class="form-control" required>
+
+  <button class="btn btn-primary mt-2">Verify</button>
+</form>

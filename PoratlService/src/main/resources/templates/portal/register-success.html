@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: content(~{::body})}">
+<head><title>Success</title></head>
+
+<body>
+<div class="alert alert-success">
+    Registration submitted. Admin will review and approve.
+</div>
+
+<a class="btn btn-primary" th:href="@{/portal}">Back to Portal</a>
+</body>
+</html>

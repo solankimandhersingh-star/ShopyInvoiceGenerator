@@ -1,0 +1,21 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: registration-service
+
+  datasource:
+    url: jdbc:h2:mem:regdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true

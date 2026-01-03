@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: content(~{::body})}">
+<head>
+    <title>Search Organisation</title>
+</head>
+
+<body>
+
+<div class="text-center mb-3">
+    <h3>Search Organisations</h3>
+    <div class="text-muted">Find organisations by name</div>
+</div>
+
+<form th:action="@{/admin/search-org}" method="get"
+      class="row g-3 justify-content-center">
+
+    <div class="col-10 col-md-8">
+        <label class="form-label">Organisation name</label>
+
+        <input class="form-control"
+               type="text"
+               name="q"
+               th:value="${q}"
+               placeholder="Type all or part of the name…" />
+    </div>
+
+    <div class="col-10 col-md-8 d-flex justify-content-center">
+        <button class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+<div class="mt-3" th:if="${results}">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="o : ${results}">
+            <td th:text="${o.name}"></td>
+            <td th:text="${o.status}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="text-center mt-3">
+    <a class="btn btn-outline-secondary" th:href="@{/admin/dashboard}">
+        Back to Dashboard
+    </a>
+</div>
+
+</body>
+</html>
