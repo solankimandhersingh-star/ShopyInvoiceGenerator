@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 
 @Service
@@ -142,76 +143,70 @@ public class InvoiceService {
                 .findByUserId(invoice.getUser().getId())
                 .orElse(new UserProfile());
 
-        // header + footer on every page
+        // Attach event handler (header + footer)
         pdf.addEventHandler(
                 PdfDocumentEvent.END_PAGE,
                 new InvoiceHeaderFooter(invoice, profile)
         );
 
-        // Prevent overlapping
-        doc.setMargins(210, 40, 150, 40);
+        // Space so content never touches header/footer
+        doc.setMargins(260, 36, 163, 36);
 
+        // ================== MAIN TABLE ==================
+        Table table = new Table(new float[]{1, 4, 2, 2, 2});
+        table.setWidth(UnitValue.createPercentValue(100));
 
-        // ---------- ITEMS TABLE ----------
-        Table items = new Table(new float[]{1, 5, 1.5f, 2f, 2f});
-        items.setWidth(UnitValue.createPercentValue(100));
+        // Header row
+        Stream.of("Qty", "Description", "Unit Price", "Discount", "Amount")
+                .forEach(text -> table.addHeaderCell(
+                        new Cell()
+                                .add(new Paragraph(text).setBold())
+                                .setBackgroundColor(new DeviceRgb(255, 153, 0))
+                ));
 
-        items.addHeaderCell("Qty");
-        items.addHeaderCell("Description");
-        items.addHeaderCell("Unit Price");
-        items.addHeaderCell("Amount");
-        items.addHeaderCell("Discount applied");
+        for (InvoiceItem item : invoice.getItems()) {
 
-        for (InvoiceItem it : invoice.getItems()) {
+            double discount = 0; // Placeholder OR your real discount logic
 
-            double lineAmount = it.getLineTotal() == null
-                    ? it.getUnitPrice() * it.getQuantity()
-                    : it.getLineTotal();
-
-            items.addCell(String.valueOf(it.getQuantity()));
-            items.addCell(it.getItemName());
-            items.addCell(safe(it.getUnitPrice()));
-            items.addCell(safe(lineAmount));
-            items.addCell("✔");
+            table.addCell(String.valueOf(item.getQuantity()));
+            table.addCell(item.getItemName());
+            table.addCell(safe(item.getUnitPrice()));
+            table.addCell(safe(discount));
+            table.addCell(safe(item.getLineTotal()));
         }
 
-        doc.add(items);
-        doc.add(new Paragraph("\n"));
+        // -------- TOTALS INSIDE SAME TABLE -------
+        table.addCell(new Cell(1, 3).setBorder(Border.NO_BORDER));
+        table.addCell("Total Amount");
+        table.addCell(safe(invoice.getSubtotal()));
 
+        table.addCell(new Cell(1, 3).setBorder(Border.NO_BORDER));
+        table.addCell("GST Total");
+        table.addCell(safe(invoice.getCgstAmount()
+                + invoice.getSgstAmount()
+                + invoice.getIgstAmount()));
 
-        // ---------- TOTALS ----------
-        Table totals = new Table(new float[]{4, 2});
-        totals.setWidth(UnitValue.createPercentValue(45));
-        totals.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.RIGHT);
+        table.addCell(new Cell(1, 3).setBorder(Border.NO_BORDER));
+        table.addCell("Discount");
+        table.addCell(safe(invoice.getDiscountAmount()));
 
-        totals.addCell("Subtotal");
-        totals.addCell(safe(invoice.getSubtotal()));
+        table.addCell(new Cell(1, 3).setBorder(Border.NO_BORDER));
+        table.addCell(new Paragraph("Grand Total").setBold());
+        table.addCell(new Paragraph(safe(invoice.getTotalAmount())).setBold());
 
-        totals.addCell("GST Total");
-        totals.addCell(
-                safe(
-                        (invoice.getCgstAmount() == null ? 0 : invoice.getCgstAmount()) +
-                                (invoice.getSgstAmount() == null ? 0 : invoice.getSgstAmount()) +
-                                (invoice.getIgstAmount() == null ? 0 : invoice.getIgstAmount())
-                )
-        );
-
-        totals.addCell("Discount");
-        totals.addCell(safe(invoice.getDiscountAmount()));
-
-        totals.addCell(new Paragraph("Grand Total").setBold());
-        totals.addCell(new Paragraph(safe(invoice.getTotalAmount())).setBold());
-
-        doc.add(totals);
+        doc.add(table);
 
         doc.close();
         return baos.toByteArray();
     }
 
+    private String safe(Object v) {
+        return v == null ? "0.0" : v.toString();
+    }
 
 
-    private String safe(Object value) {
-        return value == null ? "" : value.toString();
+    private double safeDouble(Double d) {
+        return d == null ? 0.0 : d;
     }
 
 
